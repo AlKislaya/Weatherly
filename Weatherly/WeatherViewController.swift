@@ -35,7 +35,10 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
     }
     
     func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
-        //Search for weather in the given city
+        if let city = textField.text {
+            //WeatherManager().fetchWeather(cityName: city)
+            WeatherManager().getCityLatLong(cityName: city)
+        }
         textField.text = ""
     }
 }
