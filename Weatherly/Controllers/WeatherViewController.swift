@@ -7,12 +7,14 @@
 
 import UIKit
 
-class WeatherViewController: UIViewController, UITextFieldDelegate {
+class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManagerDelegate {
     @IBOutlet weak var searchTextInput: UITextField!
+    var weatherManager = WeatherManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         searchTextInput.delegate = self
+        weatherManager.delegate = self
     }
 
     @IBAction func searchPressed(_ sender: UIButton) {
@@ -37,9 +39,18 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
     func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
         if let city = textField.text {
             //WeatherManager().fetchWeather(cityName: city)
-            WeatherManager().getCityLatLong(cityName: city)
+            weatherManager.getCityCoordinates(cityName: city)
         }
         textField.text = ""
+    }
+    
+    func didUpdateWeather(weather: WeatherModel) {
+        print(weather.temperatuteString)
+    }
+    
+    func didCityCoordinatesRetrieve(city: CityData) {
+        print(city.lat, city.lon)
+        weatherManager.fetchWeather(lat: city.lat, lon: city.lon)
     }
 }
 
