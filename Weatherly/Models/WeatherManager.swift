@@ -10,6 +10,7 @@ import Foundation
 protocol WeatherManagerDelegate {
     func didUpdateWeather(weather: WeatherModel)
     func didCityCoordinatesRetrieve(city: CityData)
+    func didFailWithError(error: Error)
 }
 
 struct WeatherManager {
@@ -20,18 +21,19 @@ struct WeatherManager {
     
     func fetchWeather(lat: Double, lon: Double) {
         let url = "https://api.openweathermap.org/data/\(apiVerData)/weather?lat=\(lat)&lon=\(lon)&units=metric&appid=\(AppId)"
-        performRequest(url: url, callback: weatherTaskHandler(data:response:error:))
+        performRequest(with: url, callback: weatherTaskHandler(data:response:error:))
     }
     
     func getCityCoordinates(cityName: String) {
         let url = "https://api.openweathermap.org/geo/\(apiVerGeo)/direct?q=\(cityName)&limit=1&appid=\(AppId)"
-        performRequest(url: url, callback: cityCoordinatesTaskHandler(data:response:error:))
+        performRequest(with: url, callback: cityCoordinatesTaskHandler(data:response:error:))
     }
     
-    func performRequest(url urlString: String, callback: @escaping (Data?, URLResponse?, Error?) -> Void){
+    func performRequest(with urlString: String, callback: @escaping (Data?, URLResponse?, Error?) -> Void){
         let url = URL(string: urlString)
         if (url == nil) {
             print("err_url_is_nil")
+            //how to throw error with custom description
             return
         }
         
@@ -44,11 +46,13 @@ struct WeatherManager {
     func cityCoordinatesTaskHandler(data: Data?, response: URLResponse?, error: Error?){
         if let safeError = error {
             print(safeError)
+            delegate?.didFailWithError(error: safeError)
             return
         }
         
         if data == nil {
             print("err_data_is_nil")
+            //how to throw error with custom description
             return
         }
         
@@ -62,17 +66,20 @@ struct WeatherManager {
             delegate?.didCityCoordinatesRetrieve(city: cityData[0])
         } catch {
             print(error)
+            delegate?.didFailWithError(error: error)
         }
     }
     
     func weatherTaskHandler(data: Data?, response: URLResponse?, error: Error?){
         if let safeError = error {
             print(safeError)
+            delegate?.didFailWithError(error: safeError)
             return
         }
         
         if data == nil {
             print("err_data_is_nil")
+            //how to throw error with custom description
             return
         }
         
@@ -83,9 +90,10 @@ struct WeatherManager {
                 print("Retrieved empty list of weather data")
                 return
             }
-            delegate?.didUpdateWeather(weather: WeatherModel(conditionId: weatherData.weather[0].id, temperature: weatherData.main.temp))
+            delegate?.didUpdateWeather(weather: WeatherModel(city: weatherData.name, conditionId: weatherData.weather[0].id, temperature: weatherData.main.temp))
         } catch {
             print(error)
+            delegate?.didFailWithError(error: error)
         }
     }
 }

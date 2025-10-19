@@ -8,8 +8,10 @@
 import Foundation
 
 struct WeatherModel {
+    let city: String
     let conditionId: Int
     let temperature: Double
+    
     var conditionName: String {
         return getConditionName(weatherId: conditionId)
     }
