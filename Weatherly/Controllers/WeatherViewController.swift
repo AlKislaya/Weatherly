@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreLocation
 
 class WeatherViewController: UIViewController {
     @IBOutlet weak var searchTextInput: UITextField!
@@ -14,11 +15,28 @@ class WeatherViewController: UIViewController {
     @IBOutlet weak var conditionImageView: UIImageView!
     
     var weatherManager = WeatherManager()
+    let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         searchTextInput.delegate = self
         weatherManager.delegate = self
+        locationManager.delegate = self
+        
+        initLocation()
+    }
+    
+    @IBAction func onLocationClicked(_ sender: UIButton) {
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestLocation()
+    }
+    
+    func initLocation() {
+        if CLLocationManager.locationServicesEnabled(), let location = locationManager.location {
+            weatherManager.fetchWeather(lat: Double(location.coordinate.latitude), lon: Double(location.coordinate.longitude))
+            return
+        }
+        
         weatherManager.fetchWeather(lat: 51.5074, lon: -0.1278) //london
     }
 }
@@ -71,5 +89,26 @@ extension WeatherViewController : WeatherManagerDelegate {
     
     func didFailWithError(error: any Error) {
         
+    }
+}
+
+//MARK: - CLLocationManagerDelegate
+extension WeatherViewController : CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if locations.isEmpty {
+            print("List of locations is empty")
+            return
+        }
+        
+        locationManager.stopUpdatingLocation()
+        
+        let lastLocation = locations.last!
+        print(lastLocation.coordinate.latitude, lastLocation.coordinate.longitude)
+        weatherManager.fetchWeather(lat: Double(lastLocation.coordinate.latitude), lon: Double(lastLocation.coordinate.longitude))
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+         print(error.localizedDescription)
     }
 }
